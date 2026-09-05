@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthInfoFromCookie } from '@/lib/auth';
 import { getAvailableApiSites, getCacheTime, getConfig } from '@/lib/config';
 import { searchFromApi } from '@/lib/downstream';
+import { METATUBE_SOURCE_KEY, searchMetatubeMovies } from '@/lib/metatube';
 import {
   executeSavedSourceScript,
   listEnabledSourceScripts,
@@ -93,6 +94,43 @@ export async function GET(request: NextRequest) {
         );
       }
 
+      return NextResponse.json(
+        { results: result },
+        {
+          headers: {
+            'Cache-Control': `public, max-age=${cacheTime}, s-maxage=${cacheTime}`,
+            'CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
+            'Vercel-CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
+            'Netlify-Vary': 'query',
+          },
+        }
+      );
+    }
+
+    if (resourceId === METATUBE_SOURCE_KEY) {
+      let result = await searchMetatubeMovies(query);
+      const normalizedQuery = query.trim().toLowerCase();
+      result = result.filter((item) =>
+        item.title.trim().toLowerCase().includes(normalizedQuery)
+      );
+      if (!config.SiteConfig.DisableYellowFilter) {
+        result = result.filter((item) => {
+          const typeName = item.type_name || '';
+          return !yellowWords.some((word: string) => typeName.includes(word));
+        });
+      }
+
+      if (result.length === 0) {
+        return NextResponse.json(
+          {
+            error: '未找到结果',
+            result: null,
+          },
+          { status: 404 }
+        );
+      }
+
+      const cacheTime = await getCacheTime();
       return NextResponse.json(
         { results: result },
         {

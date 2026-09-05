@@ -65,6 +65,7 @@ import {
   normalizeScriptSources,
   parseScriptSourceValue,
 } from '@/lib/source-script';
+import { getMetatubeMovieDetail, METATUBE_SOURCE_KEY } from '@/lib/metatube';
 
 export const runtime = 'nodejs';
 
@@ -150,6 +151,21 @@ export async function GET(request: NextRequest) {
     } catch (error) {
       return NextResponse.json(
         { error: (error as Error).message },
+        { status: 500 }
+      );
+    }
+  }
+
+  if (sourceCode === METATUBE_SOURCE_KEY) {
+    try {
+      const detail = await getMetatubeMovieDetail(id);
+      if (!detail) {
+        return NextResponse.json({ error: 'MetaTube 视频不存在或未配置' }, { status: 404 });
+      }
+      return NextResponse.json(detail);
+    } catch (error) {
+      return NextResponse.json(
+        { error: (error as Error).message || 'MetaTube 详情获取失败' },
         { status: 500 }
       );
     }
