@@ -169,8 +169,7 @@ export async function searchMetatubeMovies(query: string): Promise<SearchResult[
             type_name: '成人视频',
             douban_id: 0,
           }));
-      } catch (error) {
-        console.warn(`[MetaTube] provider ${provider} search failed:`, error);
+      } catch {
         return [];
       }
     })
