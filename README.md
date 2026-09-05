@@ -421,6 +421,9 @@ dockge/komodo 等 docker compose UI 也有自动更新功能
 | NEXT_PUBLIC_DOUBAN_IMAGE_PROXY_TYPE      | 豆瓣图片代理类型                                             | 见下方                      | direct                                                       |
 | NEXT_PUBLIC_DOUBAN_IMAGE_PROXY           | 自定义豆瓣图片代理 URL                                       | url prefix                  | (空)                                                         |
 | NEXT_PUBLIC_DISABLE_YELLOW_FILTER        | 关闭色情内容过滤                                             | true/false                  | false                                                        |
+| METATUBE_SERVER_URL                      | MetaTube 服务地址（启用 JavDB/JavBus/MissAV 搜索与播放）    | URL（如 http://127.0.0.1:8080） | (空)                                                     |
+| METATUBE_TOKEN                           | MetaTube 访问令牌（若服务端启用了鉴权则必填）                | 任意字符串                  | (空)                                                         |
+| METATUBE_PROVIDERS                       | MetaTube 搜索 Provider 列表（逗号分隔）                      | 例如 JavDB,JavBus,MissAV    | JavDB,JavBus,MissAV                                          |
 | NEXT_PUBLIC_FLUID_SEARCH                 | 是否开启搜索接口流式输出                                     | true/ false                 | true                                                         |
 | NEXT_PUBLIC_PROXY_M3U8_TOKEN             | M3U8 代理 API 鉴权 Token（外部播放器跳转时的鉴权token，不填为无鉴权） | 任意字符串                  | (空)                                                         |
 | NEXT_PUBLIC_DANMAKU_CACHE_EXPIRE_MINUTES | 弹幕缓存失效时间（分钟数，设为 0 时不缓存）                  | 0 或正整数                  | 4320（3天）                                                  |

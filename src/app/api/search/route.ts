@@ -6,6 +6,7 @@ import { getAuthInfoFromCookie } from '@/lib/auth';
 import { getAvailableApiSites, getCacheTime, getConfig } from '@/lib/config';
 import { searchFromApi } from '@/lib/downstream';
 import { getProxyToken } from '@/lib/emby-token';
+import { searchMetatubeMovies } from '@/lib/metatube';
 import { hasFeaturePermission } from '@/lib/permissions';
 import {
   executeSavedSourceScript,
@@ -191,6 +192,10 @@ export async function GET(request: NextRequest) {
   );
 
   const scriptSummaries = await listEnabledSourceScripts();
+  const metatubePromise = searchMetatubeMovies(query).catch((error) => {
+    console.error('[Search] 搜索 MetaTube 失败:', error);
+    return [];
+  });
   const scriptPromises = scriptSummaries.map((script) =>
     Promise.race([
       (async () => {
@@ -244,6 +249,7 @@ export async function GET(request: NextRequest) {
       openlistPromise,
       ...embyPromises,
       ...searchPromises,
+      metatubePromise,
       ...scriptPromises,
     ]);
 
@@ -252,14 +258,18 @@ export async function GET(request: NextRequest) {
     const openlistResults = Array.isArray(allResults[0]) ? allResults[0] : [];
     const embyResultsArray = allResults.slice(1, 1 + embyPromises.length);
     const apiResults = allResults.slice(1 + embyPromises.length, 1 + embyPromises.length + searchPromises.length);
-    const scriptResults = allResults.slice(1 + embyPromises.length + searchPromises.length);
+    const metatubeResultIndex = 1 + embyPromises.length + searchPromises.length;
+    const metatubeResults = Array.isArray(allResults[metatubeResultIndex])
+      ? (allResults[metatubeResultIndex] as any[])
+      : [];
+    const scriptResults = allResults.slice(metatubeResultIndex + 1);
 
     // 合并所有 Emby 结果，添加安全检查
     const embyResults = embyResultsArray.filter(Array.isArray).flat();
     const apiResultsFlat = apiResults.filter(Array.isArray).flat();
     const scriptResultsFlat = scriptResults.filter(Array.isArray).flat();
 
-    let flattenedResults = [...openlistResults, ...embyResults, ...apiResultsFlat, ...scriptResultsFlat];
+    let flattenedResults = [...openlistResults, ...embyResults, ...apiResultsFlat, ...metatubeResults, ...scriptResultsFlat];
 
     flattenedResults = flattenedResults.map((result) => ({
       ...result,

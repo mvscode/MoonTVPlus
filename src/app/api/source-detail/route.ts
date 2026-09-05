@@ -6,6 +6,7 @@ import { getAuthInfoFromCookie } from '@/lib/auth';
 import { getAvailableApiSites, getCacheTime, getConfig } from '@/lib/config';
 import { getDetailFromApiV2 } from '@/lib/downstream';
 import { getProxyToken } from '@/lib/emby-token';
+import { getMetatubeMovieDetail, METATUBE_SOURCE_KEY } from '@/lib/metatube';
 import {
   createBaiduNetdiskSession,
   getBaiduNetdiskSession,
@@ -19,17 +20,17 @@ import {
   refreshMobileNetdiskSession,
 } from '@/lib/netdisk/mobile-session-cache';
 import {
-  createPan123NetdiskSession,
-  getPan123NetdiskSession,
-  parsePan123NetdiskId,
-  refreshPan123NetdiskSession,
-} from '@/lib/netdisk/pan123-session-cache';
-import {
   createPan115NetdiskSession,
   getPan115NetdiskSession,
   parsePan115NetdiskId,
   refreshPan115NetdiskSession,
 } from '@/lib/netdisk/pan115-session-cache';
+import {
+  createPan123NetdiskSession,
+  getPan123NetdiskSession,
+  parsePan123NetdiskId,
+  refreshPan123NetdiskSession,
+} from '@/lib/netdisk/pan123-session-cache';
 import {
   createQuarkNetdiskSession,
   getQuarkNetdiskSession,
@@ -150,6 +151,21 @@ export async function GET(request: NextRequest) {
     } catch (error) {
       return NextResponse.json(
         { error: (error as Error).message },
+        { status: 500 }
+      );
+    }
+  }
+
+  if (sourceCode === METATUBE_SOURCE_KEY) {
+    try {
+      const detail = await getMetatubeMovieDetail(id);
+      if (!detail) {
+        return NextResponse.json({ error: 'MetaTube 视频不存在或未配置' }, { status: 404 });
+      }
+      return NextResponse.json(detail);
+    } catch (error) {
+      return NextResponse.json(
+        { error: (error as Error).message || 'MetaTube 详情获取失败' },
         { status: 500 }
       );
     }
